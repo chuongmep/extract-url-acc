@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Info Extractor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <style>
+        .copy-button {
+            font-size: 12px; 
+            margin-left: 5px; 
+            margin-top: 5px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="center-align">APS ACC URL Info Extractor</h1>
+        <p class="center-align">Please Open View 3D Model and enter a URL:</p>
+        <p class="center-align">Example URL: https://acc.autodesk.com/docs/files/projects/ec0f8261-aeca-4ab9-a1a5-5845f952b17d?folderUrn=urn%3Aadsk.wipprod%3Afs.folder%3.....</p>
+        <div class="row">
+            <div class="input-field col s12">
+                <input type="text" id="urlInput" class="validate">
+                <label for="urlInput">Enter URL</label>
+            </div>
+        </div>
+        <button class="btn waves-effect waves-light" onclick="extractInfo()">Get Info</button>
+        <div id="infoOutput" class="mt-3"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        function extractInfo() {
+            var url = document.getElementById("urlInput").value.trim();
+            if (!url) {
+                M.toast({html: 'Please Open View 3D Model and enter a URL', classes: 'rounded'});
+                return;
+            }
+
+            fetchInfo(url);
+        }
+
+        function fetchInfo(url) {
+            fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                    var urlParams = new URLSearchParams(url.split('?')[1] || '');
+
+                    var project_id = url.match(/projects\/([^\/?#]+)/)[1];
+
+                    var folder_urn = urlParams.get('folderUrn') || '';
+                    var entity_id = urlParams.get('entityId') || '';
+                    var viewable_guid = urlParams.get('viewableGuid') || '';
+
+                    var output = "Project ID: " + project_id + "<button class='btn waves-effect waves-light copy-button' onclick='copyValue(\"" + project_id + "\")'>Copy</button><br>";
+                    output += "Folder URN: " + folder_urn + "<button class='btn waves-effect waves-light copy-button' onclick='copyValue(\"" + folder_urn + "\")'>Copy</button><br>";
+                    output += "Entity ID: " + entity_id + "<button class='btn waves-effect waves-light copy-button' onclick='copyValue(\"" + entity_id + "\")'>Copy</button><br>";
+                    output += "Viewable GUID: " + viewable_guid + "<button class='btn waves-effect waves-light copy-button' onclick='copyValue(\"" + viewable_guid + "\")'>Copy</button><br>";
+
+                    document.getElementById("infoOutput").innerHTML = output;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    M.toast({html: 'Error fetching URL. Please try again.', classes: 'rounded'});
+                });
+        }
+
+        function copyValue(value) {
+            var dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = value;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+            M.toast({html: 'Copied: ' + value, classes: 'rounded'});
+        }
+    </script>
+</body>
+</html>
